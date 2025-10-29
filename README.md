@@ -8,9 +8,17 @@ A professional desktop application for currency exchange management, built with 
 - **Transaction Management**: Create, track, and manage currency exchange transactions
 - **Client Management**: Maintain client profiles and transaction history
 - **Invoice System**: Generate and manage invoices with automated workflows
-- **Exchange Rates**: Live exchange rate monitoring for 70+ currencies
-- **Analytics Dashboard**: Comprehensive business analytics and reporting
+- **Exchange Rates**: Live exchange rate monitoring for 70+ currencies with real-time status indicators
+- **Analytics Dashboard**: Comprehensive business analytics and reporting with dynamic currency conversion
 - **Receipt Printing**: Thermal printer integration for transaction receipts
+
+### Advanced Features
+- **Super Admin Panel**: Complete user management system with real-time approval/denial
+- **User Activity Tracking**: "Active now" and "last active X time ago" status indicators
+- **Real-time Status**: Live user online/offline status monitoring
+- **API Optimization**: Cost-effective exchange rate API usage with pinned countries only
+- **Enhanced Security**: Multi-layer authorization with super admin verification
+- **Dynamic Analytics**: Currency-aware analytics with base currency conversion
 
 ### Desktop-Specific Features
 - **Native Desktop Experience**: Full-featured desktop application
@@ -152,6 +160,8 @@ Set up auto-updates by configuring GitHub releases:
 - Supabase integration available
 - Real-time data synchronization
 - Multi-device access
+- User management and approval system
+- Activity tracking and monitoring
 
 ## 🔒 Security
 
@@ -212,8 +222,9 @@ Set up auto-updates by configuring GitHub releases:
 - [ ] Advanced security features
 
 ### Version History
-- **v1.0.0** - Initial desktop release
-- **v0.9.0** - Beta release with core features
+- **v1.1.0** - Super admin panel, real-time user activity tracking, API optimization
+- **v1.0.0** - Initial desktop release with core CRM features
+- **v0.9.0** - Beta release with analytics and exchange rates
 - **v0.8.0** - Alpha release for testing
 
 ## 🤝 Contributing

@@ -21,6 +21,8 @@ import InAppNotifications from "@/components/InAppNotifications";
 import AuthPage from "@/components/AuthPage";
 import PushNotificationService from "@/components/PushNotificationService";
 import SystemSettings from "@/components/SystemSettings";
+import SuperAdminPanel from "@/components/SuperAdminPanel";
+import AccessWaitingScreen from "@/components/AccessWaitingScreen";
 import CountryModal from "@/components/CountryModal";
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import ProfileSettings from "@/components/ProfileSettings";
@@ -199,6 +201,8 @@ function App() {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<string>("");
+  const [userStatus, setUserStatus] = useState<'approved' | 'pending' | 'denied'>('approved');
+  const [showSuperAdminPanel, setShowSuperAdminPanel] = useState(false);
 
   // Theme state - Integrated with system settings
   const [systemConfig, setSystemConfig] = useState<SystemConfig>({
@@ -404,6 +408,21 @@ function App() {
   const handleLogin = (username: string) => {
     setCurrentUser(username);
     setIsAuthenticated(true);
+
+    // Check if this is a super admin login
+    if (username === 'Super Admin') {
+      setUserStatus('approved');
+      setShowSuperAdminPanel(true);
+      return;
+    }
+
+    // Check if user is pending approval
+    if (username.includes('-pending')) {
+      setUserStatus('pending');
+      setCurrentUser(username.replace('-pending', ''));
+    } else {
+      setUserStatus('approved');
+    }
   };
 
   const handleLogout = async () => {
@@ -1829,6 +1848,38 @@ function App() {
     return <AuthPage onLogin={handleLogin} />;
   }
 
+  // Show super admin panel
+  if (showSuperAdminPanel) {
+    return (
+      <SuperAdminPanel
+        onBack={() => setShowSuperAdminPanel(false)}
+        currentUser={{
+          id: 'admin',
+          email: 'admin@rjbtranz.com',
+          name: 'Super Admin',
+          role: 'admin',
+          status: 'active',
+          createdAt: '2024-01-01T00:00:00Z',
+          lastLogin: new Date().toISOString()
+        }}
+      />
+    );
+  }
+
+  // Show access waiting screen for pending users
+  if (userStatus === 'pending') {
+    return (
+      <AccessWaitingScreen
+        userEmail={currentUser || 'user@example.com'}
+        onLogout={() => {
+          setIsAuthenticated(false);
+          setCurrentUser('');
+          setUserStatus('approved');
+        }}
+      />
+    );
+  }
+
   // Show system settings page
   if (showSystemSettings) {
     return (
@@ -1848,6 +1899,7 @@ function App() {
           // Optionally refresh data after sync
           console.log('Data synced successfully');
         }}
+        onOpenAdminPanel={() => setShowSuperAdminPanel(true)}
       />
     );
   }
@@ -2262,6 +2314,8 @@ function App() {
             <AnalyticsDashboard
               transactions={transactions || []}
               clients={clients || []}
+              baseCurrency={systemConfig.baseCurrency}
+              exchangeRates={exchangeRates || []}
             />
           </TabsContent>
 

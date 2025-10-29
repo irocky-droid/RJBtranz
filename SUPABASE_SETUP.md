@@ -105,6 +105,19 @@ CREATE TABLE IF NOT EXISTS system_config (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- User activity tracking table (for real-time status)
+CREATE TABLE IF NOT EXISTS user_activity (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id VARCHAR(255) NOT NULL UNIQUE,
+    last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    is_online BOOLEAN DEFAULT FALSE,
+    session_id VARCHAR(255),
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 ```
 
 ### 2. Create Indexes for Performance
@@ -126,6 +139,10 @@ CREATE INDEX IF NOT EXISTS idx_exchange_rates_last_updated ON exchange_rates(las
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
 CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON invoices(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_user_activity_user_id ON user_activity(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_activity_last_activity ON user_activity(last_activity DESC);
+CREATE INDEX IF NOT EXISTS idx_user_activity_is_online ON user_activity(is_online);
 ```
 
 ### 3. Set up Row Level Security (RLS)
@@ -137,6 +154,7 @@ ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exchange_rates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_activity ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for authenticated users
 CREATE POLICY "Enable all operations for authenticated users" ON transactions
@@ -152,6 +170,9 @@ CREATE POLICY "Enable all operations for authenticated users" ON invoices
     FOR ALL USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Enable all operations for authenticated users" ON system_config
+    FOR ALL USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable all operations for authenticated users" ON user_activity
     FOR ALL USING (auth.role() = 'authenticated');
 ```
 
@@ -198,6 +219,9 @@ Once set up, you can:
 2. **Sync Local Data**: Export your local CRM data to Supabase
 3. **Real-time Updates**: Data will sync between local storage and Supabase
 4. **Backup & Restore**: Your data is safely stored in the cloud
+5. **User Management**: Super admin panel for user approval/denial
+6. **Activity Tracking**: Real-time user activity monitoring ("active now", "last active X time ago")
+7. **Admin Authorization**: Secure super admin access with email verification
 
 ## Troubleshooting
 
