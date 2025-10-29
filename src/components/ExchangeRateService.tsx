@@ -1,4 +1,4 @@
- import { useEffect, useState, useCallback } from 'react';
+ import { useEffect, useState, useCallback, useMemo } from 'react';
  import { toast } from 'sonner';
 
 interface ExchangeRate {
@@ -130,8 +130,8 @@ const ExchangeRateService: React.FC<ExchangeRateServiceProps> = ({
   const [errorCount, setErrorCount] = useState(0);
   const [manualRefreshCount, setManualRefreshCount] = useState(0);
 
-  // Define pinned countries for real-time API calls
-  const pinnedCountries = ['GHS', 'NGN', 'KES', 'ZAR', 'EGP', 'EUR', 'GBP', 'JPY', 'CNY', 'KRW', 'INR', 'PHP'];
+  // Define pinned countries for real-time API calls - moved outside useCallback to avoid dependency issues
+  const pinnedCountries = useMemo(() => ['GHS', 'NGN', 'KES', 'ZAR', 'EGP', 'EUR', 'GBP', 'JPY', 'CNY', 'KRW', 'INR', 'PHP'], []);
 
   // Manual refresh function
   const refreshRates = useCallback(async (isManual: boolean = false) => {

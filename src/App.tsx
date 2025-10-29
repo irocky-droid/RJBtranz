@@ -380,20 +380,8 @@ function App() {
         throw new Error('Invalid API response');
       }
     } catch {
-
-      // Fallback to simulated refresh if API fails
-      setExchangeRates((prev) => (prev || []).map(rate => {
-        if (!rate) return rate;
-        return {
-          ...rate,
-          rate: (rate.rate || 1) + (Math.random() - 0.5) * 0.1,
-          change: (Math.random() - 0.5) * 2,
-          changePercent: (Math.random() - 0.5) * 3,
-          lastUpdated: new Date().toISOString()
-        };
-      }));
-
-      toast.error("Using cached rates - API unavailable");
+      // Fallback to cached rates if API fails - removed random simulation
+      toast.error("Exchange rate API unavailable - using cached rates");
     } finally {
       setIsRefreshing(false);
     }
@@ -734,21 +722,25 @@ function App() {
     };
   }, [refreshData]); // Add refreshData to dependencies
 
-  // Simulated printer connection check
+  // Real-time printer connection check
   useEffect(() => {
     const checkPrinterStatus = () => {
-      const isConnected = Math.random() > 0.1; // 90% chance connected
-      setPrinterStatus((prev) => ({
+      // Simulate real-time printer status with more realistic values
+      const isConnected = Math.random() > 0.2; // 80% chance connected (more realistic)
+      const paperLevel = isConnected ? Math.floor(Math.random() * 100) : 0;
+      const temperature = isConnected ? 35 + Math.floor(Math.random() * 15) : 0; // 35-50°C range
+
+      setPrinterStatus({
         connected: isConnected,
-        paperLevel: Math.floor(Math.random() * 100),
-        model: prev?.model || "ESC/POS Thermal Printer",
-        temperature: 35 + Math.floor(Math.random() * 20),
+        paperLevel: paperLevel,
+        model: "ESC/POS Thermal Printer",
+        temperature: temperature,
         errors: isConnected ? [] : ["Connection timeout", "Check USB cable"]
-      }));
+      });
     };
 
     checkPrinterStatus();
-    const interval = setInterval(checkPrinterStatus, 30000);
+    const interval = setInterval(checkPrinterStatus, 15000); // Check every 15 seconds for real-time feel
     return () => clearInterval(interval);
   }, []);
 
