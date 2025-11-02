@@ -9,7 +9,7 @@ export function AdminUserPanel() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { users: fetchedUsers, error: fetchError } = await window.electronAPI.listUsers();
+      const { users: fetchedUsers, error: fetchError } = await window.electronAPI!.listUsers();
       if (fetchError) {
         throw new Error(fetchError.message);
       }
@@ -31,7 +31,7 @@ export function AdminUserPanel() {
   }, [fetchUsers]);
 
   const handleAccessChange = async (userId: string, grantAccess: boolean) => {
-    const { error: updateError } = await window.electronAPI.updateUserAccess(userId, grantAccess);
+    const { error: updateError } = await window.electronAPI!.updateUserAccess(userId, grantAccess);
     if (updateError) {
       alert(`Failed to update access: ${updateError.message}`);
     } else {
