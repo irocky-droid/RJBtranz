@@ -74,15 +74,15 @@ export function AdminUserPanel() {
             <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
               <td style={{ padding: '8px' }}>{user.email || user.phone}</td>
               <td style={{ padding: '8px' }}>
-                <span style={{ color: user.app_metadata.access_granted === false ? 'red' : 'green' }}>
-                  {user.app_metadata.access_granted === false ? 'Denied' : 'Granted'}
+                <span style={{ color: user.app_metadata?.access_granted === false ? 'red' : 'green' }}>
+                  {user.app_metadata?.access_granted === false ? 'Denied' : 'Granted'}
                 </span>
               </td>
               <td style={{ padding: '8px' }}>
-                <button onClick={() => handleAccessChange(user.id, true)} disabled={user.app_metadata.access_granted !== false}>
+                <button onClick={() => handleAccessChange(user.id, true)} disabled={user.app_metadata?.access_granted !== false}>
                   Grant
                 </button>
-                <button onClick={() => handleAccessChange(user.id, false)} disabled={user.app_metadata.access_granted === false} style={{ marginLeft: '8px' }}>
+                <button onClick={() => handleAccessChange(user.id, false)} disabled={user.app_metadata?.access_granted === false} style={{ marginLeft: '8px' }}>
                   Deny
                 </button>
               </td>
