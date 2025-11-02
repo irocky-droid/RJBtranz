@@ -146,7 +146,7 @@ const ExchangeRateService: React.FC<ExchangeRateServiceProps> = ({
       try {
         // Use exchangeratesapi.com API for pinned countries only
         const symbolsParam = pinnedCountries.join(',');
-        const res = await fetch(`http://exchangesrateapi.com/api/latest?apiKey=c90082ba207e3b56822a6e043ec4edf4&base=USD&symbols=${symbolsParam}`);
+        const res = await fetch(`https://exchangesrateapi.com/api/latest?apiKey=c90082ba207e3b56822a6e043ec4edf4&base=USD&symbols=${symbolsParam}`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.rates) {
