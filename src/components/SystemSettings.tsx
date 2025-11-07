@@ -87,6 +87,7 @@ interface SystemSettingsProps {
     exchangeRates?: ExchangeRate[];
   };
   onDataSynced?: () => void;
+  onOpenAdminPanel?: () => void;
 }
 
 interface SystemConfig {
@@ -120,6 +121,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({
   onToggleTheme,
   localData = {},
   onDataSynced,
+  onOpenAdminPanel,
 }) => {
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [isClearingCache, setIsClearingCache] = useState(false);
@@ -724,6 +726,18 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
+              {onOpenAdminPanel && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={onOpenAdminPanel}
+                  className="w-full justify-start bg-yellow-600 hover:bg-yellow-700 text-white"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Panel
+                </Button>
+              )}
+
               <Button
                 variant="outline"
                 size="sm"

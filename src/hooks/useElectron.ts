@@ -1,3 +1,4 @@
+import type { IElectronAPI } from '../electron.d';
 import { useEffect, useState } from "react";
 
 interface ElectronAPI {
@@ -32,7 +33,7 @@ interface ElectronAPI {
 
 declare global {
   interface Window {
-    electronAPI?: ElectronAPI;
+    electronAPI?: IElectronAPI;
   }
 }
 

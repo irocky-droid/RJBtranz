@@ -45,6 +45,6 @@ export default defineConfig({
     }
   },
   preview: {
-    allowedHosts: ['rjb-tranz-remittance.onrender.com']
+    allowedHosts: ['rjbtranz.onrender.com']
   }
 });
