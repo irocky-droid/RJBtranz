@@ -1,4 +1,4 @@
- import { useEffect, useState, useCallback } from 'react';
+ import { useEffect, useState, useCallback, useMemo } from 'react';
  import { toast } from 'sonner';
 
 interface ExchangeRate {
@@ -128,16 +128,25 @@ const ExchangeRateService: React.FC<ExchangeRateServiceProps> = ({
   refreshInterval = 30000 // 30 seconds default
 }) => {
   const [errorCount, setErrorCount] = useState(0);
+  const [manualRefreshCount, setManualRefreshCount] = useState(0);
+
+  // Define pinned countries for real-time API calls - moved outside useCallback to avoid dependency issues
+  const pinnedCountries = useMemo(() => ['GHS', 'NGN', 'KES', 'ZAR', 'EGP', 'EUR', 'GBP', 'JPY', 'CNY', 'KRW', 'INR', 'PHP'], []);
 
   // Manual refresh function
-  const refreshRates = useCallback(async () => {
+  const refreshRates = useCallback(async (isManual: boolean = false) => {
     try {
+      if (isManual) {
+        setManualRefreshCount(prev => prev + 1);
+      }
 
-      // Try real API first (exchangerate.host is free and reliable). If it fails, fall back to internal mock.
+      // Try real API first for pinned countries only. If it fails, fall back to internal mock.
       let rates: ExchangeRate[] | null = null;
 
       try {
-        const res = await fetch('https://api.exchangerate.host/latest?base=USD');
+        // Use exchangeratesapi.com API for pinned countries only
+        const symbolsParam = pinnedCountries.join(',');
+        const res = await fetch(`http://exchangesrateapi.com/api/latest?apiKey=c90082ba207e3b56822a6e043ec4edf4&base=USD&symbols=${symbolsParam}`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.rates) {
@@ -147,11 +156,13 @@ const ExchangeRateService: React.FC<ExchangeRateServiceProps> = ({
                 rate: rateValue as number,
                 change: 0,
                 changePercent: 0,
-                lastUpdated: new Date().toISOString(),
-                region: 'north-america' as ExchangeRate['region']
+                lastUpdated: new Date(data.timestamp * 1000).toISOString(),
+                region: 'africa' as ExchangeRate['region'] // Default to Africa for pinned countries
               };
             });
           }
+        } else if (res.status === 403) {
+          console.warn('API request limit exceeded, falling back to cached rates');
         }
       } catch (err) {
         console.warn('Live exchange rate fetch failed, falling back to internal rates', err);
@@ -189,7 +200,7 @@ const ExchangeRateService: React.FC<ExchangeRateServiceProps> = ({
         toast.error('Exchange rate service temporarily unavailable');
       }
     }
-  }, [onRatesUpdate, errorCount]);
+  }, [onRatesUpdate, errorCount, pinnedCountries]);
 
   // Auto refresh effect - only if auto refresh is enabled
   useEffect(() => {
@@ -204,16 +215,19 @@ const ExchangeRateService: React.FC<ExchangeRateServiceProps> = ({
   // Expose refresh function globally for manual calls
   useEffect(() => {
     interface CustomWindow extends Window {
-      refreshExchangeRates?: () => Promise<void>;
+      refreshExchangeRates?: (isManual?: boolean) => Promise<void>;
+      getManualRefreshCount?: () => number;
     }
 
     // Make refresh function available globally
-    (window as CustomWindow).refreshExchangeRates = refreshRates;
-    
+    (window as CustomWindow).refreshExchangeRates = (isManual = false) => refreshRates(isManual);
+    (window as CustomWindow).getManualRefreshCount = () => manualRefreshCount;
+
     return () => {
       delete (window as CustomWindow).refreshExchangeRates;
+      delete (window as CustomWindow).getManualRefreshCount;
     };
-  }, [refreshRates]);
+  }, [refreshRates, manualRefreshCount]);
 
   // Connection status effect
   useEffect(() => {

@@ -5,16 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  ArrowsClockwise, 
-  Swap, 
-  TrendUp, 
+import {
+  ArrowsClockwise,
+  Swap,
+  TrendUp,
   TrendDown,
   CurrencyDollar,
   Calculator,
   Clock,
   Star,
-  X
+  X,
+  Info
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
@@ -146,6 +147,9 @@ const COUNTRY_DATA = [
   { code: 'GG', name: 'Guernsey', currency: 'GBP', phoneCode: '+44', flag: '🇬🇬', symbol: '£' },
 ];
 
+// Define pinned countries for real-time API calls
+const pinnedCountries = ['GHS', 'NGN', 'KES', 'ZAR', 'EGP', 'EUR', 'GBP', 'JPY', 'CNY', 'KRW', 'INR', 'PHP'];
+
 const getCurrencyInfoByCode = (currencyCode: string) => {
   return COUNTRY_DATA.find(c => c.currency === currencyCode);
 };
@@ -212,7 +216,7 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
       if (fromUsdRate && toUsdRate) {
         const fromRate = fromUsdRate.pair === `USD/${from}` ? fromUsdRate.rate : 1 / fromUsdRate.rate;
         const toRate = toUsdRate.pair === `USD/${to}` ? toUsdRate.rate : 1 / toUsdRate.rate;
-        
+
         return {
           pair: `${from}/${to}`,
           rate: toRate / fromRate,
@@ -225,6 +229,11 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
     }
 
     return null;
+  };
+
+  // Check if a currency is pinned (real-time)
+  const isPinnedCurrency = (currency: string): boolean => {
+    return pinnedCountries.includes(currency);
   };
 
   // Perform currency conversion
@@ -377,7 +386,24 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             {/* From Currency */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">From</label>
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                From
+                {isPinnedCurrency(fromCurrency) ? (
+                  <div className="relative group">
+                    <Info className="h-4 w-4 text-green-600 cursor-help" />
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      This is 0 milliseconds ago
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative group">
+                    <Info className="h-4 w-4 text-gray-400 cursor-help" />
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      This is not a real-time
+                    </div>
+                  </div>
+                )}
+              </label>
               <div className="relative">
                 <select
                   value={fromCurrency}
@@ -407,7 +433,24 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
 
             {/* To Currency */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">To</label>
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                To
+                {isPinnedCurrency(toCurrency) ? (
+                  <div className="relative group">
+                    <Info className="h-4 w-4 text-green-600 cursor-help" />
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      This is 0 milliseconds ago
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative group">
+                    <Info className="h-4 w-4 text-gray-400 cursor-help" />
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      This is not a real-time
+                    </div>
+                  </div>
+                )}
+              </label>
               <div className="relative">
                 <select
                   value={toCurrency}
