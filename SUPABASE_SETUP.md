@@ -18,6 +18,113 @@ Run the following SQL commands in your Supabase SQL Editor:
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Currencies table
+CREATE TABLE IF NOT EXISTS currencies (
+    code VARCHAR(5) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    symbol VARCHAR(10) NOT NULL,
+    country_code VARCHAR(2),
+    is_pinned BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Function to get comprehensive dashboard analytics
+CREATE OR REPLACE FUNCTION get_dashboard_analytics()
+RETURNS jsonb AS $$
+DECLARE
+    result jsonb;
+BEGIN
+    SELECT jsonb_build_object(
+        'transactions', (
+            SELECT jsonb_build_object(
+                'total_volume', COALESCE(SUM(base_currency_amount), 0),
+                'total_revenue', COALESCE(SUM(fee), 0), -- Assuming fee is in base currency or needs conversion
+                'total_count', COUNT(*),
+                'status_counts', (
+                    SELECT jsonb_object_agg(status, count)
+                    FROM (
+                        SELECT status, COUNT(*) as count
+                        FROM transactions
+                        GROUP BY status
+                    ) AS status_counts
+                )
+            )
+            FROM transactions
+        ),
+        'clients', (
+            SELECT jsonb_build_object(
+                'total_count', COUNT(*),
+                'verification_status_counts', (
+                    SELECT jsonb_object_agg(verification_status, count)
+                    FROM (
+                        SELECT verification_status, COUNT(*) as count
+                        FROM clients
+                        GROUP BY verification_status
+                    ) AS verification_counts
+                )
+            )
+            FROM clients
+        ),
+        'invoices', (
+            SELECT jsonb_build_object(
+                'total_count', COUNT(*),
+                'status_counts', (
+                    SELECT jsonb_object_agg(status, count)
+                    FROM (
+                        SELECT status, COUNT(*) as count
+                        FROM invoices
+                        GROUP BY status
+                    ) AS invoice_status_counts
+                )
+            )
+            FROM invoices
+        ),
+        'periods', (
+            SELECT jsonb_build_object(
+                'today', (SELECT jsonb_build_object('volume', COALESCE(SUM(base_currency_amount), 0), 'revenue', COALESCE(SUM(fee), 0)) FROM transactions WHERE created_at >= NOW() - INTERVAL '1 day'),
+                'last_7_days', (SELECT jsonb_build_object('volume', COALESCE(SUM(base_currency_amount), 0), 'revenue', COALESCE(SUM(fee), 0)) FROM transactions WHERE created_at >= NOW() - INTERVAL '7 days'),
+                'last_30_days', (SELECT jsonb_build_object('volume', COALESCE(SUM(base_currency_amount), 0), 'revenue', COALESCE(SUM(fee), 0)) FROM transactions WHERE created_at >= NOW() - INTERVAL '30 days')
+            )
+        )
+    ) INTO result;
+
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Index for pinned currencies
+CREATE INDEX IF NOT EXISTS idx_currencies_is_pinned ON currencies(is_pinned);
+
+-- Status and Type definition tables to remove hardcoding
+CREATE TABLE IF NOT EXISTS transaction_statuses (
+    name VARCHAR(20) PRIMARY KEY,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS transaction_types (
+    name VARCHAR(20) PRIMARY KEY,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS client_verification_statuses (
+    name VARCHAR(20) PRIMARY KEY,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS invoice_statuses (
+    name VARCHAR(20) PRIMARY KEY,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Remove CHECK constraints from existing tables before altering columns
+ALTER TABLE IF EXISTS transactions DROP CONSTRAINT IF EXISTS transactions_status_check;
+ALTER TABLE IF EXISTS transactions DROP CONSTRAINT IF EXISTS transactions_transaction_type_check;
+
 -- Transactions table
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -28,16 +135,20 @@ CREATE TABLE IF NOT EXISTS transactions (
     from_currency VARCHAR(10) NOT NULL,
     to_currency VARCHAR(10) NOT NULL,
     exchange_rate DECIMAL(15,8) NOT NULL,
-    fee DECIMAL(15,2) NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'cancelled')),
-    transaction_type VARCHAR(20) NOT NULL CHECK (transaction_type IN ('send', 'receive')),
+    fee DECIMAL(15,2) NOT NULL,    
+    status VARCHAR(20) NOT NULL REFERENCES transaction_statuses(name),
+    transaction_type VARCHAR(20) NOT NULL REFERENCES transaction_types(name),
     unique_id VARCHAR(255) UNIQUE,
     format_id VARCHAR(255) UNIQUE,
     unique_code VARCHAR(255) UNIQUE,
+    base_currency_amount DECIMAL(15,2) DEFAULT 0.00,
     receipt_printed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Remove CHECK constraint from clients table before altering column
+ALTER TABLE IF EXISTS clients DROP CONSTRAINT IF EXISTS clients_verification_status_check;
 
 -- Clients table
 CREATE TABLE IF NOT EXISTS clients (
@@ -50,11 +161,64 @@ CREATE TABLE IF NOT EXISTS clients (
     city VARCHAR(100),
     total_volume DECIMAL(15,2) DEFAULT 0,
     last_visit TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    verification_status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (verification_status IN ('pending', 'verified', 'rejected')),
+    verification_status VARCHAR(20) NOT NULL DEFAULT 'pending' REFERENCES client_verification_statuses(name),
     registration_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Function to convert transaction amount to base currency
+CREATE OR REPLACE FUNCTION convert_to_base_currency()
+RETURNS TRIGGER AS $$
+DECLARE
+    base_curr VARCHAR(5);
+    conversion_rate DECIMAL;
+BEGIN
+    -- 1. Get the system's base currency
+    SELECT base_currency INTO base_curr FROM public.system_config LIMIT 1;
+
+    -- 2. If the transaction is already in the base currency, just copy the amount
+    IF NEW.from_currency = base_curr THEN
+        NEW.base_currency_amount := NEW.amount;
+    ELSE
+        -- 3. Find the direct exchange rate from the transaction currency to the base currency
+        SELECT rate INTO conversion_rate
+        FROM public.exchange_rates
+        WHERE from_currency = NEW.from_currency AND to_currency = base_curr;
+
+        -- 4. If a direct rate is found, calculate and update the base_currency_amount
+        IF FOUND THEN
+            NEW.base_currency_amount := NEW.amount * conversion_rate;
+        ELSE
+            -- 5. If no direct rate, try to convert through an intermediate currency (e.g., USD)
+            -- This part can be expanded with more complex logic if needed
+            -- For now, we will leave it as 0 and log a warning if no rate is found.
+            NEW.base_currency_amount := 0.00;
+            RAISE WARNING 'No direct exchange rate found from % to %. Transaction ID: %', NEW.from_currency, base_curr, NEW.id;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to run the conversion function after a new transaction is inserted
+CREATE TRIGGER transactions_after_insert_trigger
+AFTER INSERT ON public.transactions
+FOR EACH ROW
+EXECUTE FUNCTION convert_to_base_currency();
+
+-- Optional: To backfill existing data, you can run an UPDATE statement.
+-- This is commented out by default.
+/*
+UPDATE transactions t
+SET base_currency_amount = (
+    SELECT t.amount * er.rate
+    FROM exchange_rates er
+    WHERE er.from_currency = t.from_currency AND er.to_currency = (SELECT base_currency FROM system_config LIMIT 1)
+)
+WHERE t.base_currency_amount = 0.00;
+*/
 
 -- Exchange rates table
 CREATE TABLE IF NOT EXISTS exchange_rates (
@@ -69,6 +233,9 @@ CREATE TABLE IF NOT EXISTS exchange_rates (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(from_currency, to_currency)
 );
+
+-- Remove CHECK constraint from invoices table before altering column
+ALTER TABLE IF EXISTS invoices DROP CONSTRAINT IF EXISTS invoices_status_check;
 
 -- Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
@@ -92,15 +259,15 @@ CREATE TABLE IF NOT EXISTS invoices (
     amount DECIMAL(15,2) NOT NULL,
     description TEXT,
     due_date DATE NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'paid', 'overdue', 'cancelled')),
+    status VARCHAR(20) NOT NULL DEFAULT 'draft' REFERENCES invoice_statuses(name),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- System configuration table (optional)
+-- System configuration table
 CREATE TABLE IF NOT EXISTS system_config (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id VARCHAR(255) NOT NULL UNIQUE,
+    base_currency VARCHAR(5) NOT NULL REFERENCES currencies(code),
     config_data JSONB NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -157,19 +324,51 @@ CREATE POLICY "Enable all operations for authenticated users" ON system_config
 
 ### 4. Insert Sample Data (Optional)
 
+You should populate the `currencies` table with all the currencies your application will support. The `is_pinned` column can be set to `true` for currencies you want to appear in the base currency selection dropdown.
+
 ```sql
--- Sample exchange rates
-INSERT INTO exchange_rates (pair, from_currency, to_currency, rate, change, change_percent, last_updated) VALUES
-('USD/GHS', 'USD', 'GHS', 12.45, 0.15, 1.22, NOW()),
-('USD/NGN', 'USD', 'NGN', 795.50, -5.25, -0.66, NOW()),
-('USD/KES', 'USD', 'KES', 129.75, 2.10, 1.64, NOW()),
-('USD/INR', 'USD', 'INR', 83.25, 0.45, 0.54, NOW()),
-('USD/PHP', 'USD', 'PHP', 56.75, -0.85, -1.48, NOW())
+-- Sample pinned currencies
+INSERT INTO currencies (code, name, symbol, country_code, is_pinned) VALUES
+('GHS', 'Ghanaian Cedi', '₵', 'GH', TRUE),
+('NGN', 'Nigerian Naira', '₦', 'NG', TRUE),
+('USD', 'US Dollar', '$', 'US', TRUE),
+('EUR', 'Euro', '€', 'EU', TRUE),
+('GBP', 'British Pound', '£', 'GB', TRUE),
+('KES', 'Kenyan Shilling', 'KSh', 'KE', FALSE),
+('INR', 'Indian Rupee', '₹', 'IN', FALSE),
+('PHP', 'Philippine Peso', '₱', 'PH', FALSE)
 ON CONFLICT (pair) DO UPDATE SET
     rate = EXCLUDED.rate,
     change = EXCLUDED.change,
     change_percent = EXCLUDED.change_percent,
     last_updated = EXCLUDED.last_updated;
+
+-- Populate status and type tables
+INSERT INTO transaction_statuses (name, description) VALUES
+('pending', 'Transaction is awaiting processing.'),
+('completed', 'Transaction has been successfully completed.'),
+('failed', 'Transaction has failed.'),
+('cancelled', 'Transaction has been cancelled.')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO transaction_types (name, description) VALUES
+('send', 'A transaction to send money.'),
+('receive', 'A transaction to receive money.')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO client_verification_statuses (name, description) VALUES
+('pending', 'Client verification is pending.'),
+('verified', 'Client has been successfully verified.'),
+('rejected', 'Client verification has been rejected.')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO invoice_statuses (name, description) VALUES
+('draft', 'Invoice is a draft and not yet sent.'),
+('sent', 'Invoice has been sent to the client.'),
+('paid', 'Invoice has been paid.'),
+('overdue', 'Invoice is past its due date.'),
+('cancelled', 'Invoice has been cancelled.')
+ON CONFLICT (name) DO NOTHING;
 ```
 
 ## Testing the Connection

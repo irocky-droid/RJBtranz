@@ -996,23 +996,6 @@ const CountryModal: React.FC<CountryModalProps> = ({
               ))}
             </select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              Currency <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={receiverInfo.currency}
-              onChange={(e) => setReceiverInfo(prev => ({ ...prev, currency: e.target.value }))}
-              className="h-12 px-3 border rounded-md bg-muted/50 w-full"
-            >
-              <option value="">Select a currency</option> 
-              {sortedCountryData.map(country => (
-                <option key={country.currency} value={country.currency}>
-                  {country.flag} {country.currency} ({country.symbol})
-                </option>
-              ))} 
-            </select>
-          </div>
         </div>
 
         {/* Phone Number - Optional */}

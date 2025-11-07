@@ -74,7 +74,17 @@ const AnalyticsModal = ({
         
         switch (type) {
           case 'revenue': {
-            const completedTransactions = transactions.filter(t => t.status === 'completed');
+            const seenIds = new Set();
+            const completedTransactions = transactions.filter(t => {
+              if (t.status === 'completed') {
+                if (seenIds.has(t.id)) {
+                  return false; // Prevent double counting
+                }
+                seenIds.add(t.id);
+                return true;
+              }
+              return false;
+            });
             const totalRevenue = completedTransactions.reduce((sum, t) => sum + (t.fee || 0), 0);
             const recentRevenue = completedTransactions
               .filter(t => new Date(t.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
@@ -88,7 +98,7 @@ const AnalyticsModal = ({
                 : '0',
               completedCount: completedTransactions.length,
               topCurrency: 'USD', // Most common currency
-              growth: '+15.7%'
+              growth: '0%'
             };
             break;
           }

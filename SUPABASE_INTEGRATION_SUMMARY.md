@@ -74,7 +74,7 @@ const { isConnected, connectionStatus, testConnection } = useSupabaseConnection(
 ## 🚀 Next Steps to Complete Setup
 
 ### Step 1: Run Database Schema
-1. Open your Supabase dashboard: https://ijnskyrnmoyhtmfdazdk.supabase.co
+1. Open your Supabase dashboard: https://bxrtnvcsnsoagaezvpij.supabase.co
 2. Go to SQL Editor
 3. Copy and paste the entire `supabase_schema.sql` file
 4. Click "Run" to execute the schema

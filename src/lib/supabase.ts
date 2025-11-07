@@ -100,7 +100,38 @@ export const supabaseOperations = {
 
   // Minimal CRUD placeholders used by SupabaseService - can be extended later
   async createTransaction(transaction: Transaction) {
-    return { success: true, data: transaction };
+    try {
+      // Check if transaction with same uniqueId already exists
+      const { data: existing, error: checkError } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("unique_id", transaction.uniqueId)
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (existing && existing.length > 0) {
+        // Transaction already exists, return existing data
+        return { success: true, data: transaction, exists: true };
+      }
+
+      // Create new transaction
+      const { data, error } = await supabase
+        .from("transactions")
+        .insert([transaction])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (err) {
+      console.warn("createTransaction fallback", err);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Unknown error",
+      };
+    }
   },
   async updateTransaction(_id: string, _updates: Partial<Transaction>) {
     return { success: true };
