@@ -32,6 +32,13 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
     setLoading(true);
 
     try {
+      // Check for super admin credentials
+      const isSuperAdminLogin = email === 'admin@rjbtranz.com' && password === 'SuperAdmin2024!';
+      if (isSuperAdminLogin) {
+        onLogin('Super Admin');
+        return;
+      }
+
       let user;
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
@@ -40,12 +47,17 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
           options: {
             data: {
               username: username,
+              status: 'pending', // New users start as pending
+              role: 'user'
             },
           },
         });
         if (error) throw error;
         user = data.user;
         if (!user) throw new Error("Sign up successful, but no user object returned.");
+
+        // For new signups, show waiting screen instead of immediate login
+        onLogin(`${username || email.split('@')[0]}-pending`);
 
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -55,11 +67,20 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
         if (error) throw error;
         user = data.user;
         if (!user) throw new Error("Sign in successful, but no user object returned.");
-      }
 
-      // Use username on signup, or extract from email on signin
-      const loginIdentifier = user.user_metadata?.username || user.email?.split('@')[0] || 'User';
-      onLogin(loginIdentifier);
+        // Check user status from metadata
+        const userStatus = user.user_metadata?.status || 'approved';
+
+        if (userStatus === 'pending') {
+          onLogin(`${user.user_metadata?.username || user.email?.split('@')[0]}-pending`);
+        } else if (userStatus === 'denied') {
+          throw new Error("Your account has been denied access. Please contact support.");
+        } else {
+          // Use username on signup, or extract from email on signin
+          const loginIdentifier = user.user_metadata?.username || user.email?.split('@')[0] || 'User';
+          onLogin(loginIdentifier);
+        }
+      }
 
     } catch (err: any) {
       setError(err.error_description || err.message);
