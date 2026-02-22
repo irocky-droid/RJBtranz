@@ -5,8 +5,8 @@ This document provides step-by-step instructions to set up Supabase integration 
 
 ## Prerequisites
 - Supabase account
-- Project URL: `https://ijnskyrnmoyhtmfdazdk.supabase.co`
-- Anon Public Key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqbnNreXJubW95aHRtZmRhemRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTk0MjEsImV4cCI6MjA3NDgzNTQyMX0.MAwV7HRgYRKKSBUVbfIqGW4ighagH-NzYDlM1Uooauc`
+- Project URL: `https://dpynwadvbbauevdvxjin.supabase.co`
+- Anon Public Key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRweW53YWR2YmJhdWV2ZHZ4amluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NDA4OTQsImV4cCI6MjA4NzMxNjg5NH0.4vKtNX0PSSGya73sXZEgEOHTZugvSD-gKNO-7z6AhF0`
 
 ## Database Schema Setup
 
@@ -386,7 +386,7 @@ ON CONFLICT (name) DO NOTHING;
 ## Environment Configuration
 
 The connection details are already configured in the application:
-- URL: `https://ijnskyrnmoyhtmfdazdk.supabase.co`
+- URL: `https://dpynwadvbbauevdvxjin.supabase.co`
 - Key: Already embedded in the application
 
 ## Features Available
