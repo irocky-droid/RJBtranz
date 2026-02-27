@@ -1,6 +1,6 @@
-# RJB TRANZ CRM - Desktop Application
+# RJB TRANZ CRM - Web Application
 
-A professional desktop application for currency exchange management, built with React and Electron.
+A professional web application for currency exchange management, built with React and Vite.
 
 ## 🌟 Features
 
@@ -10,17 +10,14 @@ A professional desktop application for currency exchange management, built with 
 - **Invoice System**: Generate and manage invoices with automated workflows
 - **Exchange Rates**: Live exchange rate monitoring for 70+ currencies
 - **Analytics Dashboard**: Comprehensive business analytics and reporting
-- **Receipt Printing**: Thermal printer integration for transaction receipts
+- **Receipt Printing**: Browser-based printing for transaction receipts
 
-### Desktop-Specific Features
-- **Native Desktop Experience**: Full-featured desktop application
-- **Automatic Updates**: Seamless updates via GitHub releases
-- **Keyboard Shortcuts**: Comprehensive keyboard navigation
-- **Menu Bar Integration**: Native menu with common actions
-- **File Operations**: Native file dialogs for import/export
-- **System Notifications**: Desktop notifications for important events
-- **Offline Capability**: Works without internet connection
-- **Multi-Platform**: Windows, macOS, and Linux support
+### Web Features
+- **Responsive Design**: Works on desktop and mobile browsers
+- **PWA Support**: Install as a Progressive Web App
+- **Real-time Updates**: Live data synchronization with Supabase
+- **Offline Capability**: Service worker for offline access (optional)
+- **Cross-platform**: Works on any modern browser
 
 ## 🚀 Quick Start
 
@@ -35,35 +32,40 @@ A professional desktop application for currency exchange management, built with 
 
 2. **Development Mode**
    ```bash
-   npm run electron-dev
+   npm run dev
    ```
 
 3. **Build for Production**
    ```bash
-   npm run dist
+   npm run build
+   ```
+
+4. **Preview Production Build**
+   ```bash
+   npm run preview
    ```
 
 ### For End Users
 
-Download the latest release from the [Releases page](https://github.com/irocky-stack/Rjb-tranz-/releases):
+Access the deployed application at your hosting URL or run locally:
 
-- **Windows**: Download `.exe` installer or portable version
-- **macOS**: Download `.dmg` file
-- **Linux**: Download `.AppImage`, `.deb`, or `.rpm` package
+```bash
+npm run build
+npm run preview
+```
 
 ## 📋 System Requirements
 
-### Minimum Requirements
-- **OS**: Windows 10+, macOS 10.14+, or Linux (Ubuntu 18.04+)
-- **RAM**: 4GB minimum, 8GB recommended
-- **Storage**: 500MB free space
-- **Display**: 1024x768 minimum resolution
+### Browser Support
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Modern mobile browsers
 
 ### Recommended
-- **OS**: Windows 11, macOS 12+, or Linux (Ubuntu 20.04+)
-- **RAM**: 8GB or more
-- **Storage**: 1GB free space
-- **Display**: 1920x1080 or higher
+- **RAM**: 4GB or more
+- **Display**: 1280x720 or higher
+- **Connection**: Broadband for live features
 
 ## 🛠️ Development
 
@@ -78,91 +80,53 @@ Download the latest release from the [Releases page](https://github.com/irocky-s
 npm install
 
 # Run in development mode
-npm run electron-dev
+npm run dev
 
 # Build for production
 npm run build
-npm run dist
+
+# Preview production build
+npm run preview
 ```
 
 ### Available Scripts
 
 #### Development
 - `npm run dev` - Start web development server
-- `npm run electron-dev` - Start Electron in development mode
-- `npm run dev-desktop` - Enhanced development script
-
-#### Building
 - `npm run build` - Build web application
-- `npm run electron-build` - Run built app in Electron
-- `npm run dist` - Build desktop installers for current platform
-- `npm run dist-win` - Build for Windows
-- `npm run dist-mac` - Build for macOS  
-- `npm run dist-linux` - Build for Linux
+- `npm run preview` - Preview production build
 
-## 🔄 Auto-Updates
+#### Code Quality
+- `npm run lint` - Run ESLint
+- `npm run optimize` - Optimize build
 
-The application includes automatic update functionality:
+## 🔄 Data Management
 
-1. **Automatic Checks**: App checks for updates on startup
-2. **Background Downloads**: Updates download automatically
-3. **User Notification**: Users are notified when updates are ready
-4. **One-Click Install**: Simple restart to apply updates
-
-### For Developers
-Set up auto-updates by configuring GitHub releases:
-
-1. Set `GH_TOKEN` environment variable
-2. Update repository URL in `package.json`
-3. Run `npm run dist` to build and publish
-
-## ⌨️ Keyboard Shortcuts
-
-### Navigation
-- `Ctrl/Cmd + 1` - Dashboard
-- `Ctrl/Cmd + 2` - Transactions  
-- `Ctrl/Cmd + 3` - Invoices
-- `Ctrl/Cmd + 4` - Countries
-
-### Actions
-- `Ctrl/Cmd + N` - New Transaction
-- `Ctrl/Cmd + E` - Export Data
-- `Ctrl/Cmd + R` - Refresh Data
-- `Ctrl/Cmd + ,` - Settings
-- `F11` - Toggle Fullscreen
-
-### System
-- `Ctrl/Cmd + Q` - Quit Application
-- `Ctrl/Cmd + W` - Close Window
-- `Ctrl/Cmd + M` - Minimize Window
-
-## 📊 Data Management
-
-### Local Storage
-- All data stored locally using encrypted storage
-- No internet required for core functionality
-- Automatic backup capabilities
+### Cloud Sync
+- Supabase integration for real-time data
+- Multi-device access
+- Automatic synchronization
 
 ### Export/Import
 - CSV export for all data types
 - JSON backup format
 - Excel-compatible exports
 
-### Cloud Sync (Optional)
-- Supabase integration available
-- Real-time data synchronization
-- Multi-device access
+### Offline Mode
+- Service worker caching (optional)
+- Local storage for draft data
+- Sync when back online
 
 ## 🔒 Security
 
 ### Data Protection
-- Local data encryption
-- Secure context isolation
-- No remote code execution
+- Supabase Row Level Security (RLS)
+- Encrypted connections (HTTPS)
+- Secure authentication
 
 ### Privacy
 - No telemetry or tracking
-- Local-first architecture
+- GDPR compliant
 - Optional cloud features
 
 ## 🎨 Customization
@@ -181,38 +145,38 @@ Set up auto-updates by configuring GitHub releases:
 
 ### Common Issues
 
-**App won't start**
-- Check system requirements
-- Try running as administrator (Windows)
-- Check antivirus software
+**App won't load**
+- Check browser compatibility
+- Clear browser cache
+- Verify internet connection
 
-**Auto-updates not working**
-- Check internet connection
-- Verify GitHub repository access
-- Look for error messages in console
+**Data not syncing**
+- Check Supabase connection
+- Verify authentication
+- Check browser console for errors
 
-**Print issues**  
+**Print issues**
 - Verify printer connection
-- Check printer driver installation
+- Check browser print settings
 - Test print from other applications
 
 ### Getting Help
 
 1. Check the [Issues page](https://github.com/irocky-stack/Rjb-tranz-/issues)
-2. Review the [Setup Guide](DESKTOP_SETUP.md)
+2. Review the [Supabase Setup Guide](SUPABASE_SETUP.md)
 3. Enable debug mode for detailed logs
 
 ## 📈 Roadmap
 
 ### Upcoming Features
-- [ ] Multi-currency wallet integration
-- [ ] Advanced reporting features
 - [ ] Mobile companion app
+- [ ] Advanced reporting features
 - [ ] API integrations
+- [ ] Multi-language support
 - [ ] Advanced security features
 
 ### Version History
-- **v1.0.0** - Initial desktop release
+- **v1.0.0** - Initial web release
 - **v0.9.0** - Beta release with core features
 - **v0.8.0** - Alpha release for testing
 
@@ -235,17 +199,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For technical support:
 - **Email**: support@rjbtranz.com
 - **Issues**: GitHub Issues page
-- **Documentation**: [Desktop Setup Guide](DESKTOP_SETUP.md)
+- **Documentation**: [Supabase Setup Guide](SUPABASE_SETUP.md)
 
 ## 🙏 Acknowledgments
 
 Built with:
-- [Electron](https://electronjs.org/) - Desktop app framework
 - [React](https://reactjs.org/) - UI framework
 - [Vite](https://vitejs.dev/) - Build tool
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - [Radix UI](https://radix-ui.com/) - UI components
+- [Supabase](https://supabase.com/) - Backend platform
 
 ---
 
-**RJB TRANZ CRM Desktop** - Professional currency exchange management made simple.
+**RJB TRANZ CRM Web** - Professional currency exchange management made simple.

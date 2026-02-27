@@ -28,7 +28,6 @@ export default defineConfig({
           charts: ['recharts', 'd3'],
           utils: ['date-fns', 'uuid', 'clsx', 'tailwind-merge'],
           supabase: ['@supabase/supabase-js'],
-          electron: ['electron'],
         },
       },
     },
@@ -37,7 +36,7 @@ export default defineConfig({
     port: 5173, 
     strictPort: false,
   },
-  // Ensure relative asset paths when packaged under Electron (file://)
+  // Ensure relative asset paths for static file serving
   base: './',
   resolve: {
     alias: {

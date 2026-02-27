@@ -2,9 +2,9 @@
   "name": "rjbtranz",
   "private": false,
   "version": "1.0.0",
-  "description": "RJB TRANZ Professional Currency Exchange CRM - Desktop Application",
+  "description": "RJB TRANZ Professional Currency Exchange CRM - Web Application",
   "type": "module",
-  "main": "electron/main.mjs",
+  "main": "index.html",
   "homepage": "./",
   "author": {
     "name": "RJB TRANZ",
@@ -15,23 +15,13 @@
     "url": "https://github.com/irocky-stack/Rjb-tranz-.git"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.renderer.json && tsc -p tsconfig.main.json && vite build",
+    "build": "tsc -p tsconfig.renderer.json && vite build",
     "dev": "vite",
     "start": "cross-env PORT=5000 vite preview --host 0.0.0.0 --port $PORT",
     "kill": "fuser -k 5000/tcp",
     "lint": "eslint .",
     "optimize": "vite optimize",
-    "preview": "vite preview",
-    "electron": "cross-env NODE_ENV=development electron .",
-    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron-build": "npm run build && electron .",
-    "dev-desktop": "node scripts/dev-desktop.js",
-    "dist": "npm run build && node scripts/check-icons.js && electron-builder",
-    "dist-dir": "npm run build && node scripts/check-icons.js && electron-builder --dir",
-    "dist-win": "npm run build && node scripts/check-icons.js && electron-builder --win",
-    "dist-mac": "npm run build && node scripts/check-icons.js && electron-builder --mac",
-    "dist-linux": "npm run build && node scripts/check-icons.js && electron-builder --linux",
-    "postinstall": "electron-builder install-app-deps"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -75,12 +65,6 @@
     "d3": "^7.9.0",
     "date-fns": "^3.6.0",
     "dedupe": "^4.0.3",
-    "electron-context-menu": "^4.1.1",
-    "electron-is-dev": "^3.0.1",
-    "electron-log": "^5.4.3",
-    "electron-store": "^11.0.2",
-    "electron-unhandled": "^5.0.0",
-    "electron-updater": "^6.6.2",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-fade": "^8.6.0",
     "embla-carousel-react": "^8.5.2",
@@ -119,10 +103,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitejs/plugin-react-swc": "^3.10.1",
     "autoprefixer": "^10.4.21",
-    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron": "^38.2.0",
-    "electron-builder": "^26.0.12",
     "eslint": "^9.28.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
@@ -133,104 +114,11 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.46.1",
     "vite": "^6.3.5",
-    "vitest": "^3.2.4",
-    "wait-on": "^9.0.1"
+    "vitest": "^3.2.4"
   },
   "workspaces": {
     "packages": [
       "packages/*"
     ]
-  },
-  "build": {
-    "appId": "com.rjbtranz.desktop",
-    "productName": "RJB TRANZ Desktop",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "node_modules/**/*",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "electron/assets",
-        "to": "assets"
-      }
-    ],
-    "mac": {
-      "category": "public.app-category.business",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "electron/assets/icon.icns"
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
-      ],
-      "icon": "electron/assets/icon.ico"
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "rpm",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "electron/assets/icon.png"
-    },
-    "nsis": {
-      "oneClick": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "irocky-stack",
-      "repo": "Rjb-tranz-"
-    }
   }
 }
